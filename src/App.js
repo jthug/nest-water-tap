@@ -5,7 +5,7 @@ import Content from "./content/Content"
 import Foot from "./foot/Foot"
 function App() {
   return (
-    <div className="App">
+    <div className="container">
       <Head/>
       <Content/>
       <Foot/>
