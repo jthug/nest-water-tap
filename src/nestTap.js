@@ -1,6 +1,5 @@
-import web3Util from "../utils/web3Util";
+
 import Web3 from "web3";
-import constant from "../constant";
 const contractAbi = [
   {
     inputs: [],
@@ -197,7 +196,7 @@ const contractAbi = [
 // if(typeof web3 !=='undefined'){
 
 // }
-const web3 = new Web3(constant.INFURA_NET)
+const web3 = new Web3("https://ropsten.infura.io/v3/ad670fd33ebc42f89befc52283fa6a00")
 const contractAddress = "0x0819BA0346c6741efD88B051b0756A6073A4230c";
 
 let nestTap = new web3.eth.Contract(contractAbi, contractAddress);

@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import "./content.scss";
-import nestTap from "../contracts/nestTap";
 import web3Instance from "../utils/web3Util";
-import Web3 from "web3";
-import { wait } from "@testing-library/react";
-import constant from "../constant";
-
+import nestTap from "../nestTap"
 const contractAbi = [
   {
     inputs: [],
@@ -206,6 +202,9 @@ function Content() {
   const [_receiveTimes, set_receiveTimes] = useState(0);
   const [_receiveAddress, set_receiveAddress] = useState(0);
   const [canGetNest, setCanGetNest] = useState(0);
+  const [invitorAddress, setInvitorAddress] = useState("");
+  const [_firstReceive, set_firstReceive] = useState(true);
+
 
   nestTap.methods
     .getStatistics()
@@ -221,6 +220,7 @@ function Content() {
     .call()
     .then(function(result) {
       const _latestBlock = result._latestBlock; //上次领取区块
+      const _firstReceive = result._firstReceive //是否是首次领取
       web3Instance()
         .eth.getBlockNumber()
         .then(function(result) {
@@ -245,8 +245,8 @@ function Content() {
   // });
 
   if (typeof window.ethereum === "undefined") {
-    alert("Looks like you need a Dapp browser to get started.");
-    alert("Consider installing MetaMask!");
+    // alert("Looks like you need a Dapp browser to get started.");
+    alert("检测到您未安装MateMask,请前往安装");
   } else {
   }
 
@@ -311,18 +311,25 @@ function Content() {
           <form>
             输入邀请人地址
             <br /> <br />
-            <input />
+            <input
+              onChange={e => {
+                setInvitorAddress(e.target.value);
+              }}
+            />
             <p>
               有邀请码且未被使用，领取人能获取当前全部 NEST，邀请人额外奖励
               50%； 若没有邀请码，或邀请码已被使用，领取人最多只能获取 100 NEST
             </p>
             <div>
               我的邀请权限：
-              <span>已激活</span>
+              <span style={{color:_firstReceive?"#FF6666":"#6666FF"}}>{_firstReceive?"首次领取后激活":"已激活"}</span>
             </div>
             <div style={{ textAlign: "center", marginTop: "30px" }}>
-              <button onClick={() => click(window)}>领取</button>
+              <button onClick={() => click(window, invitorAddress)}>
+                领取
+              </button>
             </div>
+            <div style={{ textAlign: "center", marginTop: "10px"}}><a  href="www.baidu.com">如何安装MateMask ?</a></div>
           </form>
         </div>
       </div>
@@ -331,7 +338,7 @@ function Content() {
           <div className="item">
             <img src="/assets/ic_left.png" alt="" />
             <p>累计发放 NEST</p>
-            <span>{_receiveNest}</span>
+            <span>{window.web3.fromWei(_receiveNest, "ether")}</span>
           </div>
           <div className="item">
             <img src="/assets/ic_middle.png" alt="" />
@@ -362,43 +369,40 @@ function Content() {
   );
 }
 
-async function click(window) {
-  // let contract = new window.web3.eth.Contract(contractAbi, contractAddress);
-
-  // contract.methods
-  //   .normalReceive()
-  //   .call()
-  //   .then(function(err,result) {
-  //     if(err){
-  //       alert("失败"+JSON.stringify(err));
-  //     }else{
-  //       alert("领取成功！");
-  //     }
-
-  //   });
+async function click(window, invitorAddress) {
   const accounts = await window.ethereum.enable();
-  let func = {
-    inputs: [],
-    name: "normalReceive"
+  // let data = {
+  //   name:"normalReceive()"
+  // }
+
+  // let hexData = window.web3.toHex(data)
+
+  // let params = {
+  //   from:window.ethereum.selectedAddress,
+  //   to:contractAddress,
+  //   data:"0x6783ba77"
+  // }
+  // window.ethereum.sendAsync(
+  //   {
+  //     method: 'eth_sendTransaction',
+  //     params: [params],
+  //     from:window.ethereum.selectedAddress
+  //   },
+  //   function(err,res){
+  //     // alert("sss")
+  //   }
+  // )
+  
+  if (invitorAddress!="") {
+    window.web3.eth
+      .contract(contractAbi)
+      .at(contractAddress)
+      .invitationReceive(invitorAddress);
+  } else {
+    window.web3.eth
+      .contract(contractAbi)
+      .at(contractAddress)
+      .normalReceive();
   }
-
-  const transactionParameters = {
-    to: constant.INFURA_NET, // Required except during contract publications.
-    from: accounts[0], // must match user's active address.
-    // to:"0xCD62e06741880d2000C46C90E8040c27966973BE",
-    // value: '0x00', // Only required to send ether to the recipient from the initiating external account.
-    data: ""
-  };
-
-  window.ethereum.sendAsync(
-    {
-      method: "eth_sendTransaction",
-      params: [transactionParameters],
-      from: accounts[0]
-    },
-    (err, result) => {
-      alert(JSON.stringify(err) + " " + JSON.stringify(result));
-    }
-  );
 }
 export default Content;
